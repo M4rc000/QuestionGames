@@ -433,8 +433,9 @@ export default function Game() {
 
           {/* Incoming reaction */}
           {incomingReaction && (
-            <div key={incomingReaction.key} className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center">
-              <span className="text-7xl animate-bounce" style={{ animationDuration: '1s' }}>{incomingReaction.emoji}</span>
+            <div key={incomingReaction.key} className="fixed pointer-events-none z-50 animate-emoji-fly"
+              style={{ top: '15%', right: '24px' }}>
+              <span className="text-5xl">{incomingReaction.emoji}</span>
             </div>
           )}
         </div>

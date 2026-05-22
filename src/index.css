@@ -18,6 +18,7 @@
   --animate-fade-in: fade-in 0.5s ease-out forwards;
   --animate-scale-in: scale-in 0.4s ease-out forwards;
   --animate-glow: glow 2s ease-in-out infinite alternate;
+  --animate-emoji-fly: emoji-fly 1.8s ease-out forwards;
 
   @keyframes float {
     0%, 100% { transform: translateY(0px); }
@@ -46,6 +47,13 @@
   @keyframes glow {
     0% { box-shadow: 0 0 5px rgba(236,72,153,0.3), 0 0 10px rgba(139,92,246,0.2); }
     100% { box-shadow: 0 0 15px rgba(236,72,153,0.5), 0 0 30px rgba(139,92,246,0.3); }
+  }
+  @keyframes emoji-fly {
+    0% { opacity: 0; transform: translate(40px, 20px) scale(0.5); }
+    15% { opacity: 1; transform: translate(10px, -10px) scale(1.2); }
+    40% { opacity: 1; transform: translate(-30px, -30px) scale(1); }
+    70% { opacity: 0.8; transform: translate(-60px, -50px) scale(0.8); }
+    100% { opacity: 0; transform: translate(-80px, -60px) scale(0.4); }
   }
 }
 
