@@ -100,7 +100,6 @@ export default function CreateRoom() {
           <ul className="text-sm space-y-1.5 text-theme-muted">
             <li className="flex items-start gap-2"><span className="mt-0.5">•</span><span>Minimal <strong>2 pertanyaan</strong> agar game bisa dimulai</span></li>
             <li className="flex items-start gap-2"><span className="mt-0.5">•</span><span>Pertanyaan akan ditampilkan secara acak</span></li>
-            <li className="flex items-start gap-2"><span className="mt-0.5">•</span><span>Setiap pemain punya <strong>3x kesempatan</strong> memilih dari 5 opsi</span></li>
             <li className="flex items-start gap-2"><span className="mt-0.5">•</span><span>Pertanyaan yang sudah dipakai tidak bisa dipakai lagi</span></li>
           </ul>
         </div>

@@ -31,6 +31,7 @@ export default function Game() {
   const [showAnimation, setShowAnimation] = useState(false)
   const [showPickList, setShowPickList] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [showEndConfirm, setShowEndConfirm] = useState(false)
   const [incomingReaction, setIncomingReaction] = useState<{ emoji: string; key: number } | null>(null)
   const firstAutoPickDone = useRef(false)
 
@@ -203,8 +204,8 @@ export default function Game() {
               </button>
               {showEmojiPicker && (
                 <>
-                  <div className="absolute top-full right-0 mt-2 z-50 p-3 rounded-2xl border shadow-lg grid grid-cols-5 gap-1.5"
-                    style={{ background: 'var(--panel-bg)', borderColor: 'var(--card-border)' }}>
+                  <div className="absolute top-full right-0 mt-2 z-50 p-3 rounded-2xl border shadow-lg grid grid-cols-7 gap-1.5"
+                    style={{ background: 'var(--panel-bg)', borderColor: 'var(--card-border)', minWidth: '280px' }}>
                     {EMOJIS.map((e) => (
                       <button key={e} onClick={() => { sendReaction(e); setShowEmojiPicker(false) }}
                         className="w-9 h-9 flex items-center justify-center text-lg rounded-xl hover:scale-120 transition-transform cursor-pointer active:scale-140"
@@ -220,6 +221,44 @@ export default function Game() {
           )}
 
         </div>
+
+        {/* Exit + custom confirm */}
+        {room?.status === 'playing' && (
+          <>
+            <button onClick={() => setShowEndConfirm(true)}
+              className="self-start px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer active:scale-95"
+              style={{ background: `${theme.primary}10`, color: theme.primary, border: `1px solid ${theme.primary}20` }}>
+              ✕ Akhiri
+            </button>
+            {showEndConfirm && (
+              <>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                  <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.4)' }} onClick={() => setShowEndConfirm(false)} />
+                  <div className="relative z-10 rounded-2xl p-6 shadow-2xl max-w-sm w-full animate-scale-in border"
+                    style={{ background: 'var(--panel-bg)', borderColor: `${theme.primary}25` }}>
+                    <div className="text-center space-y-4">
+                      <div className="text-4xl">🛑</div>
+                      <h3 className="text-lg font-bold text-theme-heading">Akhiri Game?</h3>
+                      <p className="text-sm text-theme-muted">Semua progress akan hilang dan game akan langsung menampilkan statistik.</p>
+                      <div className="flex gap-3 pt-2">
+                        <button onClick={() => setShowEndConfirm(false)}
+                          className="flex-1 py-3 rounded-xl font-semibold text-sm transition-all cursor-pointer active:scale-95 border"
+                          style={{ background: 'var(--card-bg)', color: 'var(--text-muted)', borderColor: 'var(--card-border)' }}>
+                          Batal
+                        </button>
+                        <button onClick={async () => { setShowEndConfirm(false); await endGame() }}
+                          className="flex-1 py-3 rounded-xl font-semibold text-sm text-white transition-all cursor-pointer active:scale-95 btn-shine"
+                          style={{ background: theme.gradient }}>
+                          Ya, Akhiri
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </>
+        )}
 
         {/* Main */}
         <div className="flex-1 flex flex-col items-center justify-center py-4 space-y-4">
@@ -262,11 +301,11 @@ export default function Game() {
                 </button>
                 <button onClick={() => {
                   const sh = [...unusedQuestions].sort(() => Math.random() - 0.5)
-                  setPickOptions(sh.slice(0, Math.min(5, sh.length))); setShowPickList(true)
+                  setPickOptions(sh); setShowPickList(true)
                 }} disabled={loading}
                   className="w-full py-4 px-6 rounded-2xl font-semibold text-lg border-2 shadow-sm hover:shadow-lg transition-all duration-300 disabled:opacity-40 cursor-pointer"
                   style={{ background: 'var(--card-bg)', color: theme.primary, borderColor: `${theme.primary}30` }}>
-                  🎯 Pilih dari 5
+                  🎯 Pilih Pertanyaan
                 </button>
               </div>
             </div>
@@ -397,15 +436,6 @@ export default function Game() {
             <div key={incomingReaction.key} className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center">
               <span className="text-7xl animate-bounce" style={{ animationDuration: '1s' }}>{incomingReaction.emoji}</span>
             </div>
-          )}
-
-          {/* Exit button */}
-          {room?.status === 'playing' && (
-            <button onClick={async () => { if (confirm('Akhiri game?')) await endGame() }}
-              className="px-5 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer active:scale-95"
-              style={{ background: `${theme.primary}12`, color: theme.primary, border: `1px solid ${theme.primary}25` }}>
-              ✕ Akhiri Game
-            </button>
           )}
         </div>
       </div>
