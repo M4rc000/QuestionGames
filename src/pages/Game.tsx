@@ -228,7 +228,7 @@ export default function Game() {
             <button onClick={() => setShowEndConfirm(true)}
               className="self-start px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer active:scale-95"
               style={{ background: `${theme.primary}10`, color: theme.primary, border: `1px solid ${theme.primary}20` }}>
-              ✕ Akhiri
+              🚪 Keluar
             </button>
             {showEndConfirm && (
               <>
@@ -238,7 +238,7 @@ export default function Game() {
                     style={{ background: 'var(--panel-bg)', borderColor: `${theme.primary}25` }}>
                     <div className="text-center space-y-4">
                       <div className="text-4xl">🛑</div>
-                      <h3 className="text-lg font-bold text-theme-heading">Akhiri Game?</h3>
+                      <h3 className="text-lg font-bold text-theme-heading">Keluar Game?</h3>
                       <p className="text-sm text-theme-muted">Semua progress akan hilang dan game akan langsung menampilkan statistik.</p>
                       <div className="flex gap-3 pt-2">
                         <button onClick={() => setShowEndConfirm(false)}
@@ -249,7 +249,7 @@ export default function Game() {
                         <button onClick={async () => { setShowEndConfirm(false); await endGame() }}
                           className="flex-1 py-3 rounded-xl font-semibold text-sm text-white transition-all cursor-pointer active:scale-95 btn-shine"
                           style={{ background: theme.gradient }}>
-                          Ya, Akhiri
+                          Ya, Keluar
                         </button>
                       </div>
                     </div>
