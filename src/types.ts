@@ -8,6 +8,7 @@ export interface Room {
   usedQuestions: string[]
   answers: Record<string, string>
   players: string[]
+  ready: [boolean, boolean]
   status: RoomStatus
   currentTurn: PlayerIndex
   currentPhase: GamePhase

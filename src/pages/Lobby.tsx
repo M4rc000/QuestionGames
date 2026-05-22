@@ -7,7 +7,7 @@ export default function Lobby() {
   const { roomId } = useParams<{ roomId: string }>()
   const navigate = useNavigate()
   const { theme } = useTheme()
-  const { room, session, reconnectToRoom, setPlayerName } = useGame()
+  const { room, session, reconnectToRoom, setPlayerName, toggleReady, loading } = useGame()
   const [nameInput, setNameInput] = useState('')
   const [copied, setCopied] = useState(false)
   const [nameSaved, setNameSaved] = useState(false)
@@ -17,6 +17,8 @@ export default function Lobby() {
   const isCreator = session?.sessionId === room?.players?.[0]
   const myIndex = isCreator ? 0 : 1
   const myCurrentName = room?.playerNames?.[myIndex]
+  const bothJoined = room?.players[0] && room?.players[1]
+  const bothReady = room?.ready?.[0] && room?.ready?.[1]
 
   useEffect(() => {
     if (myCurrentName && myCurrentName !== `Player ${myIndex + 1}` && !nameSaved) {
@@ -29,11 +31,11 @@ export default function Lobby() {
   }, [nameInput, setPlayerName, nameSaved])
 
   useEffect(() => {
-    if (room?.status === 'playing' && room.players[0] && room.players[1]) {
+    if (room?.status === 'playing') {
       const t = setTimeout(() => navigate(`/game/${roomId}`), 800)
       return () => clearTimeout(t)
     }
-  }, [room?.status, room?.players, roomId, navigate])
+  }, [room?.status, roomId, navigate])
 
   async function copyCode() {
     if (!room?.code) return
@@ -55,7 +57,6 @@ export default function Lobby() {
     )
   }
 
-  const bothJoined = room.players[0] && room.players[1]
   const player1Name = room.playerNames?.[0] || 'Player 1'
   const player2Name = room.playerNames?.[1] || 'Player 2'
 
@@ -89,16 +90,41 @@ export default function Lobby() {
           <h3 className="font-semibold text-theme-heading flex items-center gap-2"><span>👥</span> Pemain di Room</h3>
           <div className="space-y-3">
             {[
-              { idx: 0, label: isCreator ? 'Kamu (Host)' : player1Name, joined: room.players[0], initial: isCreator ? 'K' : 'P1', bg: theme.gradient },
-              { idx: 1, label: !isCreator ? (nameSaved ? nameInput : 'Kamu') : (player2Name || 'Pasangan'), joined: room.players[1], initial: !isCreator ? 'K' : 'P2', bg: theme.gradientRev },
+              {
+                idx: 0,
+                label: isCreator ? 'Kamu' : player1Name,
+                joined: !!room.players[0],
+                ready: room.ready?.[0],
+                initial: isCreator ? 'K' : 'P1',
+                bg: theme.gradient,
+                isMe: session?.sessionId === room.players[0],
+              },
+              {
+                idx: 1,
+                label: !isCreator ? (nameSaved ? nameInput : 'Kamu') : (player2Name || 'Pasangan'),
+                joined: !!room.players[1],
+                ready: room.ready?.[1],
+                initial: !isCreator ? 'K' : 'P2',
+                bg: theme.gradientRev,
+                isMe: session?.sessionId === room.players[1],
+              },
             ].map((p, i) => (
               <div key={i} className={`p-4 rounded-xl flex items-center gap-3 transition-all duration-500 ${p.joined ? 'border' : 'border border-dashed'}`}
                 style={{ background: p.joined ? `${theme.primary}08` : 'rgba(0,0,0,0.02)', borderColor: p.joined ? `${theme.primary}30` : 'var(--card-border)' }}>
                 <div className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md shrink-0" style={{ background: p.joined ? p.bg : '#d1d5db' }}>{p.initial}</div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-theme-heading truncate">{p.label}</p>
-                  <p className="text-xs" style={{ color: theme.primary }}>{p.joined ? '✓ Sudah join' : '⏳ Menunggu...'}</p>
+                  <p className="text-xs" style={{ color: p.ready ? theme.primary : 'var(--text-subtle)' }}>
+                    {p.ready ? '✓ Siap' : !p.joined ? '⏳ Menunggu...' : '⏳ Belum siap'}
+                  </p>
                 </div>
+                {p.isMe && p.joined && !bothReady && (
+                  <button onClick={toggleReady} disabled={loading}
+                    className="px-4 py-2 text-white text-sm font-semibold rounded-xl transition-all btn-shine cursor-pointer disabled:opacity-50"
+                    style={{ background: p.ready ? theme.gradientRev : theme.gradient }}>
+                    {p.ready ? '✕ Batal' : '✓ Siap'}
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -136,10 +162,17 @@ export default function Lobby() {
             <p className="text-xs text-theme-subtle">Refresh halaman jika sudah menunggu lama</p>
           </div>
         )}
-        {bothJoined && (
+        {bothJoined && !bothReady && (
+          <div className="text-center animate-fade-in">
+            <div className="inline-flex items-center gap-2 font-semibold px-6 py-3 rounded-2xl border" style={{ background: `${theme.primary}10`, color: theme.primary, borderColor: `${theme.primary}30` }}>
+              <span className="text-xl">👆</span> Kedua pemain harus tekan <strong>Siap</strong> untuk mulai
+            </div>
+          </div>
+        )}
+        {bothReady && (
           <div className="text-center animate-fade-in">
             <div className="inline-flex items-center gap-2 font-semibold px-6 py-3 rounded-2xl border" style={{ background: `${theme.primary}15`, color: theme.primary, borderColor: `${theme.primary}30` }}>
-              <span className="text-xl">✨</span> Kedua pemain sudah siap! Mengarahkan ke game...
+              <span className="text-xl">✨</span> Semua siap! Mengarahkan ke game...
             </div>
           </div>
         )}

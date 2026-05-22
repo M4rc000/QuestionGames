@@ -35,14 +35,17 @@ export async function createRoom(
   const roomCode = generateRoomCode()
   const roomId = roomCode.toLowerCase()
 
+  const firstTurn = Math.random() < 0.5 ? 0 : 1
+
   const roomData: Room = {
     code: roomCode,
     questions,
     usedQuestions: [],
     answers: {},
     players: [sessionId, ''],
+    ready: [false, false],
     status: 'waiting',
-    currentTurn: 0,
+    currentTurn: firstTurn as PlayerIndex,
     currentPhase: 'asking',
     pickChances: {
       [sessionId]: 3,
@@ -93,7 +96,6 @@ export async function joinRoom(
 
   await updateDoc(roomRef, {
     players: updatedPlayers,
-    status: 'playing',
     pickChances,
   })
 
@@ -186,6 +188,29 @@ export async function answerQuestion(
 
   if (remainingQuestions.length === 0) {
     updates.status = 'finished'
+  }
+
+  await updateDoc(roomRef, updates)
+}
+
+export async function toggleReady(
+  roomId: string,
+  sessionId: string
+): Promise<void> {
+  const roomRef = getRoomRef(roomId)
+  const roomSnap = await getDoc(roomRef)
+  const room = roomSnap.data() as Room
+
+  const idx = room.players.indexOf(sessionId)
+  if (idx === -1) throw new Error('Player not in room')
+
+  const newReady: [boolean, boolean] = [...room.ready] as [boolean, boolean]
+  newReady[idx] = !newReady[idx]
+
+  const updates: Record<string, any> = { ready: newReady }
+
+  if (newReady[0] && newReady[1]) {
+    updates.status = 'playing'
   }
 
   await updateDoc(roomRef, updates)

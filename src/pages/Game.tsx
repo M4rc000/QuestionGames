@@ -28,7 +28,6 @@ export default function Game() {
   const [timer, setTimer] = useState(30)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [showAnimation, setShowAnimation] = useState(false)
-  const [justSubmitted, setJustSubmitted] = useState(false)
   const [showPickList, setShowPickList] = useState(false)
   const firstAutoPickDone = useRef(false)
 
@@ -128,22 +127,20 @@ export default function Game() {
   const sendQuestion = useCallback(async () => {
     if (!selectedQuestion) return
     await submitQuestion(selectedQuestion, usedPickChance)
-    setUsedPickChance(false); setJustSubmitted(true); setLocalPhase('sent'); clearTimer()
-    setTimeout(() => { setJustSubmitted(false); setLocalPhase('waiting') }, 1500)
+    setUsedPickChance(false); setLocalPhase('sent'); clearTimer()
+    setTimeout(() => { setLocalPhase('waiting') }, 1500)
   }, [selectedQuestion, submitQuestion, usedPickChance, clearTimer])
 
   const handleAnswer = useCallback(async () => {
     if (!currentQuestion) return
     await submitAnswer(currentQuestion, answerText.trim() || '— Skipped —')
-    setJustSubmitted(true); setLocalPhase('sent')
-    setTimeout(() => { setJustSubmitted(false); setLocalPhase('waiting') }, 1200)
+    setLocalPhase('waiting')
   }, [currentQuestion, answerText, submitAnswer])
 
   const handleSkip = useCallback(async () => {
     if (!currentQuestion) return
     await submitAnswer(currentQuestion, '— Skipped —')
-    setJustSubmitted(true); setLocalPhase('sent')
-    setTimeout(() => { setJustSubmitted(false); setLocalPhase('waiting') }, 1200)
+    setLocalPhase('waiting')
   }, [currentQuestion, submitAnswer])
 
   const glassBorder = `1px solid ${theme.primary}30`
@@ -287,41 +284,31 @@ export default function Game() {
           {/* Answering */}
           {myTurnToAnswer && localPhase === 'answering' && (
             <div className="w-full max-w-sm space-y-6 animate-fade-up">
-              {justSubmitted ? (
-                <div className="text-center space-y-4 animate-scale-in">
-                  <div className="text-6xl animate-heartbeat">✅</div>
-                  <p className="font-semibold text-lg" style={{ color: theme.primary }}>Jawaban terkirim!</p>
-                  <p className="text-sm text-theme-muted">Bersiap untuk giliran bertanya...</p>
+              <div className="text-center space-y-3">
+                <div className="text-4xl animate-float">💭</div>
+                <p className="text-sm text-theme-muted"><strong style={{ color: theme.primary }}>{peerName}</strong> bertanya:</p>
+                <div className="rounded-2xl p-6 shadow-lg" style={{ background: 'var(--card-bg)', backdropFilter: 'blur(12px)', border: glassBorder, boxShadow: `var(--card-shadow), ${glassShadow}` }}>
+                  <p className="text-lg font-medium leading-relaxed text-theme-heading">{currentQuestion}</p>
                 </div>
-              ) : (
-                <>
-                  <div className="text-center space-y-3">
-                    <div className="text-4xl animate-float">💭</div>
-                    <p className="text-sm text-theme-muted"><strong style={{ color: theme.primary }}>{peerName}</strong> bertanya:</p>
-    <div className="rounded-2xl p-6 shadow-lg" style={{ background: 'var(--card-bg)', backdropFilter: 'blur(12px)', border: glassBorder, boxShadow: `var(--card-shadow), ${glassShadow}` }}>
-                      <p className="text-lg font-medium leading-relaxed text-theme-heading">{currentQuestion}</p>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <textarea value={answerText} onChange={(e) => setAnswerText(e.target.value)}
-                      placeholder="Tulis jawabanmu di sini..." rows={3}
-                      className="w-full p-4 border rounded-xl focus:ring-2 outline-none resize-none transition-all text-theme-body"
-                      style={{ borderColor: `${theme.secondary}30`, background: 'var(--input-bg)' }} autoFocus />
-                    <div className="flex gap-3">
-                      <button onClick={handleAnswer} disabled={loading || !answerText.trim()}
-                        className="flex-1 py-3.5 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-40 btn-shine cursor-pointer disabled:cursor-not-allowed"
-                        style={{ background: theme.gradient }}>
-                        {loading ? 'Mengirim...' : '💬 Kirim Jawaban'}
-                      </button>
-                      <button onClick={handleSkip} disabled={loading}
-                        className="py-3.5 px-6 rounded-xl font-medium transition-all cursor-pointer disabled:opacity-50 whitespace-nowrap"
-                        style={{ background: `${theme.secondary}15`, color: theme.secondary }}>
-                        ⏭ Skip
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
+              </div>
+              <div className="space-y-3">
+                <textarea value={answerText} onChange={(e) => setAnswerText(e.target.value)}
+                  placeholder="Tulis jawabanmu di sini..." rows={3}
+                  className="w-full p-4 border rounded-xl focus:ring-2 outline-none resize-none transition-all text-theme-body"
+                  style={{ borderColor: `${theme.secondary}30`, background: 'var(--input-bg)' }} autoFocus />
+                <div className="flex gap-3">
+                  <button onClick={handleAnswer} disabled={loading || !answerText.trim()}
+                    className="flex-1 py-3.5 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-40 btn-shine cursor-pointer disabled:cursor-not-allowed"
+                    style={{ background: theme.gradient }}>
+                    {loading ? 'Mengirim...' : '💬 Kirim Jawaban'}
+                  </button>
+                  <button onClick={handleSkip} disabled={loading}
+                    className="py-3.5 px-6 rounded-xl font-medium transition-all cursor-pointer disabled:opacity-50 whitespace-nowrap"
+                    style={{ background: `${theme.secondary}15`, color: theme.secondary }}>
+                    ⏭ Skip
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 

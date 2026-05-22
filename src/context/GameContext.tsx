@@ -7,6 +7,7 @@ import {
   reconnectRoom,
   askQuestion,
   answerQuestion,
+  toggleReady as toggleReadyService,
   subscribeRoom,
 } from '../firebase/roomService'
 import {
@@ -33,6 +34,7 @@ interface GameContextType {
   isMyTurnToAnswer: () => boolean
   getUnusedQuestions: () => string[]
   setPlayerName: (name: string) => Promise<void>
+  toggleReady: () => Promise<void>
   reconnectToRoom: () => Promise<void>
   clearError: () => void
 }
@@ -255,6 +257,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }
   }, [session])
 
+  const toggleReady = useCallback(async () => {
+    if (!session?.roomId) return
+    setLoading(true)
+    try {
+      await toggleReadyService(session.roomId, session.sessionId)
+    } catch (e: any) {
+      setError(e.message || 'Gagal toggle ready')
+    } finally {
+      setLoading(false)
+    }
+  }, [session])
+
   const clearError = useCallback(() => setError(null), [])
 
   return (
@@ -273,6 +287,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         isMyTurnToAnswer,
         getUnusedQuestions,
         setPlayerName,
+        toggleReady,
         reconnectToRoom,
         clearError,
       }}
