@@ -165,7 +165,8 @@ export default function Lobby() {
         {bothJoined && !bothReady && (
           <div className="text-center animate-fade-in">
             <div className="inline-flex items-center gap-2 font-semibold px-6 py-3 rounded-2xl border" style={{ background: `${theme.primary}10`, color: theme.primary, borderColor: `${theme.primary}30` }}>
-              <span className="text-xl">👆</span> Kedua pemain harus tekan <strong>Siap</strong> untuk mulai
+              <span className="text-xl">👆</span>
+              Menunggu <strong>{!room.ready[0] ? (room.playerNames[0] || 'Player 1') : (room.playerNames[1] || 'Player 2')}</strong> Siap
             </div>
           </div>
         )}

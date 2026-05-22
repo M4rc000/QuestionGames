@@ -134,14 +134,14 @@ export default function Game() {
   const handleAnswer = useCallback(async () => {
     if (!currentQuestion) return
     await submitAnswer(currentQuestion, answerText.trim() || '— Skipped —')
-    setLocalPhase('waiting')
-  }, [currentQuestion, answerText, submitAnswer])
+    setLocalPhase('choosing_mode'); startTimer(); setSelectedQuestion(''); setAnswerText(''); setShowPickList(false)
+  }, [currentQuestion, answerText, submitAnswer, startTimer])
 
   const handleSkip = useCallback(async () => {
     if (!currentQuestion) return
     await submitAnswer(currentQuestion, '— Skipped —')
-    setLocalPhase('waiting')
-  }, [currentQuestion, submitAnswer])
+    setLocalPhase('choosing_mode'); startTimer(); setSelectedQuestion(''); setAnswerText(''); setShowPickList(false)
+  }, [currentQuestion, submitAnswer, startTimer])
 
   const glassBorder = `1px solid ${theme.primary}30`
   const glassShadow = `0 8px 30px ${theme.primary}20`
