@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useGame } from '../context/GameContext'
 import { useTheme } from '../context/ThemeContext'
 
+const EMOJIS = ['❤️', '😂', '😍', '😘', '🥰', '😊', '💕', '💗', '🔥', '👏', '🎉', '😭', '😤', '🤗']
+
 type LocalPhase =
   | 'waiting'
   | 'choosing_mode'
@@ -16,19 +18,19 @@ export default function Game() {
   const { theme } = useTheme()
   const {
     room, session, isMyTurn, isMyTurnToAnswer,
-    getMyPickChances, getUnusedQuestions,
-    submitQuestion, submitAnswer, loading, reconnectToRoom,
+    getUnusedQuestions,
+    submitQuestion, submitAnswer, sendReaction, loading, reconnectToRoom,
   } = useGame()
 
   const [localPhase, setLocalPhase] = useState<LocalPhase>('waiting')
   const [selectedQuestion, setSelectedQuestion] = useState<string>('')
   const [pickOptions, setPickOptions] = useState<string[]>([])
-  const [usedPickChance, setUsedPickChance] = useState(false)
   const [answerText, setAnswerText] = useState('')
   const [timer, setTimer] = useState(60)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [showAnimation, setShowAnimation] = useState(false)
   const [showPickList, setShowPickList] = useState(false)
+  const [incomingReaction, setIncomingReaction] = useState<{ emoji: string; key: number } | null>(null)
   const firstAutoPickDone = useRef(false)
 
   useEffect(() => { if (roomId) reconnectToRoom() }, [roomId])
@@ -38,7 +40,6 @@ export default function Game() {
 
   const myTurn = isMyTurn()
   const myTurnToAnswer = isMyTurnToAnswer()
-  const pickChances = getMyPickChances()
   const unusedQuestions = getUnusedQuestions()
   const totalQuestions = room?.questions.length || 0
   const usedCount = room?.usedQuestions.length || 0
@@ -65,11 +66,11 @@ export default function Game() {
 
   const previousAnswer = useMemo(() => {
     if (!room || !session) return null
-    if (room.lastAnswer && room.lastAnswerBy !== session.sessionId && currentQuestion) {
-      return room.lastAnswer
+    if (room.lastAnswer && room.lastAnswerBy !== session.sessionId && room.lastAnswerFor) {
+      return { question: room.lastAnswerFor, answer: room.lastAnswer }
     }
     return null
-  }, [room?.lastAnswer, room?.lastAnswerBy, session?.sessionId, currentQuestion])
+  }, [room?.lastAnswer, room?.lastAnswerBy, room?.lastAnswerFor, session?.sessionId])
 
   const clearTimer = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
@@ -84,7 +85,7 @@ export default function Game() {
 
   const handleRandom = useCallback(() => {
     if (unusedQuestions.length === 0) return
-    clearTimer(); setUsedPickChance(false)
+    clearTimer()
     setSelectedQuestion(unusedQuestions[Math.floor(Math.random() * unusedQuestions.length)])
     setLocalPhase('showing_question'); setShowAnimation(true)
     setTimeout(() => setShowAnimation(false), 600)
@@ -96,7 +97,7 @@ export default function Game() {
       const qs = getUnusedQuestions()
       if (qs.length > 0) {
         setSelectedQuestion(qs[Math.floor(Math.random() * qs.length)])
-        setUsedPickChance(false); setLocalPhase('showing_question'); setShowAnimation(true)
+        setLocalPhase('showing_question'); setShowAnimation(true)
         setTimeout(() => setShowAnimation(false), 600)
       }
     }
@@ -118,18 +119,28 @@ export default function Game() {
     if (timer === 0 && localPhase === 'choosing_mode') handleRandom()
   }, [timer, localPhase, handleRandom])
 
+  const reactionCounter = useRef(0)
+  useEffect(() => {
+    if (room?.lastReaction && room.lastReaction.from !== session?.sessionId) {
+      reactionCounter.current += 1
+      setIncomingReaction({ emoji: room.lastReaction.emoji, key: reactionCounter.current })
+      const t = setTimeout(() => setIncomingReaction(null), 2000)
+      return () => clearTimeout(t)
+    }
+  }, [room?.lastReaction?.emoji, room?.lastReaction?.from])
+
   const confirmPick = useCallback((q: string) => {
-    setSelectedQuestion(q); setUsedPickChance(true); setShowPickList(false)
+    setSelectedQuestion(q); setShowPickList(false)
     setLocalPhase('showing_question'); setShowAnimation(true)
     setTimeout(() => setShowAnimation(false), 600)
   }, [])
 
   const sendQuestion = useCallback(async () => {
     if (!selectedQuestion) return
-    await submitQuestion(selectedQuestion, usedPickChance)
-    setUsedPickChance(false); setLocalPhase('sent'); clearTimer()
+    await submitQuestion(selectedQuestion)
+    setLocalPhase('sent'); clearTimer()
     setTimeout(() => { setLocalPhase('waiting') }, 1500)
-  }, [selectedQuestion, submitQuestion, usedPickChance, clearTimer])
+  }, [selectedQuestion, submitQuestion, clearTimer])
 
   const handleAnswer = useCallback(async () => {
     if (!currentQuestion) return
@@ -182,9 +193,6 @@ export default function Game() {
             }}>
             {myTurn ? '🎯 Giliran kamu bertanya' : myTurnToAnswer ? `✋ ${peerName} bertanya` : room?.currentPhase === 'answering' ? `⏳ ${peerName} menjawab...` : `⏳ ${peerName} memilih...`}
           </div>
-          <div className="text-xs px-3 py-2 rounded-xl border shadow-sm whitespace-nowrap text-theme-muted" style={{ background: 'var(--card-bg)', borderColor: 'var(--card-border)', boxShadow: 'var(--card-shadow)' }}>
-            🎲 Pilih 5: <span className="font-bold" style={{ color: theme.primary }}>{pickChances}</span>
-          </div>
         </div>
 
         {/* Main */}
@@ -194,7 +202,8 @@ export default function Game() {
             <div className="w-full max-w-sm animate-fade-in">
               <div className="rounded-xl p-4 border backdrop-blur-sm" style={{ background: `${theme.secondary}08`, borderColor: `${theme.secondary}20` }}>
                 <p className="text-xs font-medium mb-1 text-theme-muted">💬 Jawaban sebelumnya:</p>
-                <p className="text-sm" style={{ color: theme.primaryDark }}>{previousAnswer}</p>
+                <p className="text-xs text-theme-subtle mb-1 italic">"{previousAnswer.question}"</p>
+                <p className="text-sm" style={{ color: theme.primaryDark }}>{previousAnswer.answer}</p>
               </div>
             </div>
           )}
@@ -226,13 +235,13 @@ export default function Game() {
                   🎲 Lempar Random
                 </button>
                 <button onClick={() => {
-                  if (pickChances <= 0) return; clearTimer()
+                  clearTimer()
                   const sh = [...unusedQuestions].sort(() => Math.random() - 0.5)
                   setPickOptions(sh.slice(0, Math.min(5, sh.length))); setShowPickList(true)
-                }} disabled={pickChances <= 0 || loading}
+                }} disabled={loading}
                   className="w-full py-4 px-6 rounded-2xl font-semibold text-lg border-2 shadow-sm hover:shadow-lg transition-all duration-300 disabled:opacity-40 cursor-pointer"
                   style={{ background: 'var(--card-bg)', color: theme.primary, borderColor: `${theme.primary}30` }}>
-                  🎯 Pilih dari 5 <span className="text-sm font-normal text-theme-muted">(sisa {pickChances})</span>
+                  🎯 Pilih dari 5
                 </button>
               </div>
             </div>
@@ -244,7 +253,6 @@ export default function Game() {
               <div className="text-center space-y-2">
                 <div className="text-4xl">🎯</div>
                 <h3 className="text-lg font-bold text-theme-heading">Pilih 1 pertanyaan</h3>
-                <p className="text-xs text-theme-muted">Sisa: {pickChances - 1}</p>
               </div>
               <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
                 {pickOptions.map((q, i) => (
@@ -337,10 +345,28 @@ export default function Game() {
                 <div className="w-full max-w-sm animate-fade-in">
                   <div className="rounded-xl p-4 border backdrop-blur-sm" style={{ background: `${theme.secondary}08`, borderColor: `${theme.secondary}20` }}>
                     <p className="text-xs font-medium mb-1 text-theme-muted">💬 Jawaban {peerName} sebelumnya:</p>
-                    <p className="text-sm" style={{ color: theme.primaryDark }}>{previousAnswer}</p>
+                    <p className="text-xs text-theme-subtle mb-1 italic">"{previousAnswer.question}"</p>
+                    <p className="text-sm" style={{ color: theme.primaryDark }}>{previousAnswer.answer}</p>
                   </div>
                 </div>
-              )}
+          )}
+
+          {/* Incoming reaction */}
+          {incomingReaction && (
+            <div key={incomingReaction.key} className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center">
+              <span className="text-7xl animate-bounce" style={{ animationDuration: '1s' }}>{incomingReaction.emoji}</span>
+            </div>
+          )}
+
+          {/* Emoji reactions bar */}
+          <div className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-2xl border self-center" style={{ background: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
+            {EMOJIS.map((e) => (
+              <button key={e} onClick={() => sendReaction(e)}
+                className="text-lg hover:scale-130 transition-transform cursor-pointer active:scale-150">
+                {e}
+              </button>
+            ))}
+          </div>
               <div className="w-full max-w-sm text-center space-y-4 animate-fade-in">
                 <div className="animate-float text-4xl">💭</div>
                 <p className="text-sm text-theme-muted">

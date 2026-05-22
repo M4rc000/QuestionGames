@@ -57,7 +57,6 @@ export default function JoinRoom() {
             <input type="text" value={code} onChange={(e) => handleCodeChange(e.target.value)} placeholder="CONTOH: ABC123" maxLength={6}
               className="w-full p-5 text-center text-3xl font-mono font-bold tracking-[0.4em] border-2 rounded-xl focus:ring-2 outline-none uppercase transition-all text-theme-body"
               style={{ borderColor: `${theme.secondary}30`, background: 'var(--input-bg)' }} autoFocus />
-            <p className="text-xs text-center text-theme-subtle">{code.length}/6 karakter</p>
           </div>
           {error && <div className="p-3.5 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm text-center animate-scale-in">{error}</div>}
           <button onClick={handleJoin} disabled={code.length < 4 || loading}

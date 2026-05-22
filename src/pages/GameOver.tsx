@@ -15,7 +15,7 @@ export default function GameOver() {
   const usedQuestions = room?.usedQuestions || []
   const answers = room?.answers || {}
   const usedCount = usedQuestions.length
-  const answeredCount = Object.keys(answers).length
+  const answeredCount = Object.values(answers).filter(a => a !== '— Skipped —').length
   const skippedCount = Object.values(answers).filter(a => a === '— Skipped —').length
 
   const qa = useMemo(() => allQuestions.map(q => ({

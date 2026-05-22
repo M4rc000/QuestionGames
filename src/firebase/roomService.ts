@@ -47,13 +47,13 @@ export async function createRoom(
     status: 'waiting',
     currentTurn: firstTurn as PlayerIndex,
     currentPhase: 'asking',
-    pickChances: {
-      [sessionId]: 3,
-    },
+    pickChances: {},
     lastQuestion: '',
     lastQuestionBy: '',
     lastAnswer: '',
     lastAnswerBy: '',
+    lastAnswerFor: '',
+    lastReaction: null,
     createdAt: serverTimestamp() as any,
     playerNames: ['Player 1', 'Player 2'],
   }
@@ -89,14 +89,9 @@ export async function joinRoom(
   }
 
   const updatedPlayers: [string, string] = [room.players[0], sessionId]
-  const pickChances = {
-    ...(room.pickChances || {}),
-    [sessionId]: 3,
-  }
 
   await updateDoc(roomRef, {
     players: updatedPlayers,
-    pickChances,
   })
 
   return {
@@ -105,7 +100,6 @@ export async function joinRoom(
       ...room,
       players: updatedPlayers,
       status: 'playing',
-      pickChances,
       answers: room.answers || {},
     },
   }
@@ -128,8 +122,7 @@ export async function reconnectRoom(
 export async function askQuestion(
   roomId: string,
   question: string,
-  sessionId: string,
-  usedPickChance: boolean
+  sessionId: string
 ): Promise<void> {
   const roomRef = getRoomRef(roomId)
   const roomSnap = await getDoc(roomRef)
@@ -142,19 +135,6 @@ export async function askQuestion(
     lastQuestion: question,
     lastQuestionBy: sessionId,
     currentPhase: 'answering',
-  }
-
-  if (usedPickChance) {
-    const currentChances = room.pickChances?.[sessionId] ?? 3
-    updates[`pickChances.${sessionId}`] = currentChances - 1
-  }
-
-  const remainingQuestions = room.questions.filter(
-    (q) => ![...room.usedQuestions, question].includes(q)
-  )
-
-  if (remainingQuestions.length === 0) {
-    updates.status = 'finished'
   }
 
   await updateDoc(roomRef, updates)
@@ -182,6 +162,7 @@ export async function answerQuestion(
     [`answers.${question}`]: answer,
     lastAnswer: answer,
     lastAnswerBy: sessionId,
+    lastAnswerFor: question,
     currentPhase: 'asking',
     currentTurn: playerIndex,
   }
@@ -214,6 +195,17 @@ export async function toggleReady(
   }
 
   await updateDoc(roomRef, updates)
+}
+
+export async function sendReaction(
+  roomId: string,
+  sessionId: string,
+  emoji: string
+): Promise<void> {
+  const roomRef = getRoomRef(roomId)
+  await updateDoc(roomRef, {
+    lastReaction: { from: sessionId, emoji },
+  })
 }
 
 export function subscribeRoom(

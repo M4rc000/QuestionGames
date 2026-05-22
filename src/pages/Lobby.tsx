@@ -58,9 +58,6 @@ export default function Lobby() {
     )
   }
 
-  const player1Name = room.playerNames?.[0] || 'Player 1'
-  const player2Name = room.playerNames?.[1] || 'Player 2'
-
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-6 animate-fade-up">
@@ -109,19 +106,19 @@ export default function Lobby() {
             {[
               {
                 idx: 0,
-                label: isCreator ? 'Kamu' : player1Name,
+                label: session?.sessionId === room.players[0] ? (nameSaved ? `${nameInput} (Kamu)` : 'Kamu') : (room.playerNames?.[0] || 'Player 1'),
                 joined: !!room.players[0],
                 ready: room.ready?.[0],
-                initial: isCreator ? 'K' : 'P1',
+                initial: session?.sessionId === room.players[0] ? (nameSaved ? nameInput[0].toUpperCase() : 'K') : (room.playerNames?.[0]?.[0] || 'P1'),
                 bg: theme.gradient,
                 isMe: session?.sessionId === room.players[0],
               },
               {
                 idx: 1,
-                label: !isCreator ? (nameSaved ? nameInput : 'Kamu') : (player2Name || 'Pasangan'),
+                label: session?.sessionId === room.players[1] ? (nameSaved ? `${nameInput} (Kamu)` : 'Kamu') : (room.playerNames?.[1] || 'Pasangan'),
                 joined: !!room.players[1],
                 ready: room.ready?.[1],
-                initial: !isCreator ? 'K' : 'P2',
+                initial: session?.sessionId === room.players[1] ? (nameSaved ? nameInput[0].toUpperCase() : 'K') : (room.playerNames?.[1]?.[0] || 'P2'),
                 bg: theme.gradientRev,
                 isMe: session?.sessionId === room.players[1],
               },

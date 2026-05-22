@@ -7,6 +7,7 @@ import {
   reconnectRoom,
   askQuestion,
   answerQuestion,
+  sendReaction as sendReactionService,
   toggleReady as toggleReadyService,
   subscribeRoom,
 } from '../firebase/roomService'
@@ -27,14 +28,14 @@ interface GameContextType {
   error: string | null
   createNewRoom: (questions: string[]) => Promise<string | null>
   joinExistingRoom: (code: string) => Promise<string | null>
-  submitQuestion: (question: string, usedPickChance: boolean) => Promise<void>
+  submitQuestion: (question: string) => Promise<void>
   submitAnswer: (question: string, answer: string) => Promise<void>
-  getMyPickChances: () => number
   isMyTurn: () => boolean
   isMyTurnToAnswer: () => boolean
   getUnusedQuestions: () => string[]
   setPlayerName: (name: string) => Promise<void>
   toggleReady: () => Promise<void>
+  sendReaction: (emoji: string) => Promise<void>
   reconnectToRoom: () => Promise<void>
   clearError: () => void
 }
@@ -150,16 +151,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
   )
 
   const submitQuestion = useCallback(
-    async (question: string, usedPickChance: boolean) => {
+    async (question: string) => {
       if (!session?.roomId) return
       setLoading(true)
       try {
-        await askQuestion(
-          session.roomId,
-          question,
-          session.sessionId,
-          usedPickChance
-        )
+        await askQuestion(session.roomId, question, session.sessionId)
       } catch (e: any) {
         setError(e.message || 'Gagal mengirim pertanyaan')
       } finally {
@@ -188,11 +184,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
     },
     [session]
   )
-
-  const getMyPickChances = useCallback((): number => {
-    if (!session || !room) return 0
-    return room.pickChances?.[session.sessionId] ?? 0
-  }, [session, room])
 
   const isMyTurn = useCallback((): boolean => {
     if (!session || !room) return false
@@ -269,6 +260,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }
   }, [session])
 
+  const sendReaction = useCallback(
+    async (emoji: string) => {
+      if (!session?.roomId) return
+      try {
+        await sendReactionService(session.roomId, session.sessionId, emoji)
+      } catch (e: any) {
+        console.error('Failed to send reaction:', e)
+      }
+    },
+    [session]
+  )
+
   const clearError = useCallback(() => setError(null), [])
 
   return (
@@ -282,12 +285,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
         joinExistingRoom,
         submitQuestion,
         submitAnswer,
-        getMyPickChances,
         isMyTurn,
         isMyTurnToAnswer,
         getUnusedQuestions,
         setPlayerName,
         toggleReady,
+        sendReaction,
         reconnectToRoom,
         clearError,
       }}
