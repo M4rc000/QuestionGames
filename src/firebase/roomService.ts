@@ -55,6 +55,7 @@ export async function createRoom(
     lastAnswerFor: '',
     lastReaction: null,
     reactionTs: 0,
+    typingBy: '',
     createdAt: serverTimestamp() as any,
     playerNames: ['Player 1', 'Player 2'],
   }
@@ -213,6 +214,17 @@ export async function sendReaction(
 export async function endGame(roomId: string): Promise<void> {
   const roomRef = getRoomRef(roomId)
   await updateDoc(roomRef, { status: 'finished' })
+}
+
+export async function setTyping(
+  roomId: string,
+  sessionId: string
+): Promise<void> {
+  await updateDoc(getRoomRef(roomId), { typingBy: sessionId })
+}
+
+export async function clearTyping(roomId: string): Promise<void> {
+  await updateDoc(getRoomRef(roomId), { typingBy: '' })
 }
 
 export function subscribeRoom(

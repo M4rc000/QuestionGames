@@ -19,7 +19,7 @@ export default function Game() {
   const {
     room, session, isMyTurn, isMyTurnToAnswer,
     getUnusedQuestions,
-    submitQuestion, submitAnswer, sendReaction, endGame, loading, reconnectToRoom,
+    submitQuestion, submitAnswer, sendReaction, endGame, setTyping, clearTyping, loading, reconnectToRoom,
   } = useGame()
 
   const [localPhase, setLocalPhase] = useState<LocalPhase>('waiting')
@@ -130,6 +130,22 @@ export default function Game() {
       return () => clearTimeout(t)
     }
   }, [room?.reactionTs])
+
+  /* Turn notification */
+  useEffect(() => {
+    const isActive = myTurn || myTurnToAnswer
+    if (isActive && document.hidden) {
+      document.title = myTurn ? '🎯 Giliranmu!' : '✋ Jawab!'
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('QuestionGame', {
+          body: myTurn ? 'Giliran kamu bertanya!' : `${peerName} bertanya, ayo jawab!`,
+          icon: '/favicon.ico',
+        })
+      }
+    } else if (!isActive) {
+      document.title = 'QuestionGame'
+    }
+  }, [myTurn, myTurnToAnswer, peerName])
 
   const confirmPick = useCallback((q: string) => {
     setSelectedQuestion(q); setShowPickList(false)
@@ -336,13 +352,13 @@ export default function Game() {
 
           {/* Showing question */}
           {localPhase === 'showing_question' && selectedQuestion && (
-            <div className="w-full max-w-sm text-center space-y-6 animate-scale-in">
+            <div className="w-full max-w-sm text-center space-y-6">
               <div className={`transition-all duration-500 ${showAnimation ? 'scale-110 opacity-0' : 'scale-100 opacity-100'}`}>
                 <div className="text-5xl mb-3">💌</div>
                 <p className="text-sm mb-3 text-theme-muted">
                   Pertanyaan untuk <strong style={{ color: theme.primary }}>{peerName}</strong>:
                 </p>
-                <div className="rounded-2xl p-6 shadow-lg" style={{ background: 'var(--card-bg)', backdropFilter: 'blur(12px)', border: glassBorder, boxShadow: `var(--card-shadow), ${glassShadow}` }}>
+                <div className="rounded-2xl p-6 shadow-lg card-flip" style={{ background: 'var(--card-bg)', backdropFilter: 'blur(12px)', border: glassBorder, boxShadow: `var(--card-shadow), ${glassShadow}` }}>
                   <p className="text-lg font-medium leading-relaxed text-theme-heading">{selectedQuestion}</p>
                 </div>
               </div>
@@ -360,12 +376,13 @@ export default function Game() {
               <div className="text-center space-y-3">
                 <div className="text-4xl animate-float">💭</div>
                 <p className="text-sm text-theme-muted"><strong style={{ color: theme.primary }}>{peerName}</strong> bertanya:</p>
-                <div className="rounded-2xl p-6 shadow-lg" style={{ background: 'var(--card-bg)', backdropFilter: 'blur(12px)', border: glassBorder, boxShadow: `var(--card-shadow), ${glassShadow}` }}>
+                <div className="rounded-2xl p-6 shadow-lg answer-reveal" style={{ background: 'var(--card-bg)', backdropFilter: 'blur(12px)', border: glassBorder, boxShadow: `var(--card-shadow), ${glassShadow}` }}>
                   <p className="text-lg font-medium leading-relaxed text-theme-heading">{currentQuestion}</p>
                 </div>
               </div>
               <div className="space-y-3">
-                <textarea value={answerText} onChange={(e) => setAnswerText(e.target.value)}
+                <textarea value={answerText} onChange={(e) => { setAnswerText(e.target.value); setTyping() }}
+                  onFocus={setTyping} onBlur={clearTyping}
                   placeholder="Tulis jawabanmu di sini..." rows={3}
                   className="w-full p-4 border rounded-xl focus:ring-2 outline-none resize-none transition-all text-theme-body"
                   style={{ borderColor: `${theme.secondary}30`, background: 'var(--input-bg)' }} autoFocus />
@@ -391,6 +408,9 @@ export default function Game() {
               <div className="text-6xl animate-heartbeat">✉️</div>
               <p className="font-semibold text-lg" style={{ color: theme.primary }}>Pertanyaan terkirim!</p>
               <p className="text-sm text-theme-muted">Menunggu {peerName} menjawab...</p>
+              {room?.typingBy && room.typingBy !== session?.sessionId && (
+                <p className="text-xs animate-pulse" style={{ color: theme.secondary }}>✍️ {peerName} sedang mengetik...</p>
+              )}
             </div>
           )}
 
@@ -420,6 +440,9 @@ export default function Game() {
                 <p className="text-sm text-theme-muted">
                   <strong style={{ color: theme.primary }}>{peerName}</strong> {room?.currentPhase === 'answering' ? 'sedang menjawab pertanyaan...' : 'sedang memilih pertanyaan...'}
                 </p>
+                {room?.currentPhase === 'answering' && room?.typingBy && room.typingBy !== session?.sessionId && (
+                  <p className="text-xs animate-pulse" style={{ color: theme.secondary }}>✍️ {peerName} sedang mengetik...</p>
+                )}
                 <div className="rounded-2xl p-6 shadow-lg" style={{ background: 'var(--card-bg)', backdropFilter: 'blur(12px)', border: glassBorder, boxShadow: `var(--card-shadow), ${glassShadow}` }}>
                   <p className="text-theme-subtle text-xs mb-2">Pertanyaan sebelumnya</p>
                   <p className="text-lg font-medium leading-relaxed text-theme-heading">{currentQuestion}</p>
@@ -428,6 +451,9 @@ export default function Game() {
                   <span className="w-2 h-2 rounded-full animate-ping" style={{ background: theme.primary }} />
                   <span className="text-sm">{room?.currentPhase === 'answering' ? 'Menunggu jawaban...' : 'Menunggu pertanyaan baru...'}</span>
                 </div>
+                {room?.currentPhase === 'answering' && room?.typingBy && room.typingBy !== session?.sessionId && (
+                  <p className="text-xs animate-pulse" style={{ color: theme.secondary }}>✍️ {peerName} sedang mengetik...</p>
+                )}
               </div>
             </>
           )}

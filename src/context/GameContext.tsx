@@ -9,6 +9,8 @@ import {
   answerQuestion,
   sendReaction as sendReactionService,
   endGame as endGameService,
+  setTyping as setTypingService,
+  clearTyping as clearTypingService,
   toggleReady as toggleReadyService,
   subscribeRoom,
 } from '../firebase/roomService'
@@ -38,6 +40,8 @@ interface GameContextType {
   toggleReady: () => Promise<void>
   sendReaction: (emoji: string) => Promise<void>
   endGame: () => Promise<void>
+  setTyping: () => Promise<void>
+  clearTyping: () => Promise<void>
   reconnectToRoom: () => Promise<void>
   clearError: () => void
 }
@@ -283,6 +287,20 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }
   }, [session])
 
+  const setTyping = useCallback(async () => {
+    if (!session?.roomId) return
+    try {
+      await setTypingService(session.roomId, session.sessionId)
+    } catch {}
+  }, [session])
+
+  const clearTyping = useCallback(async () => {
+    if (!session?.roomId) return
+    try {
+      await clearTypingService(session.roomId)
+    } catch {}
+  }, [session])
+
   const clearError = useCallback(() => setError(null), [])
 
   return (
@@ -303,6 +321,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
         toggleReady,
         sendReaction,
         endGame,
+        setTyping,
+        clearTyping,
         reconnectToRoom,
         clearError,
       }}

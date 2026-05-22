@@ -20,6 +20,7 @@ export interface Room {
   lastAnswerFor: string
   lastReaction: { from: string; emoji: string } | null
   reactionTs: number
+  typingBy: string
   createdAt: any
   playerNames: [string, string]
 }
