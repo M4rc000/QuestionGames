@@ -30,6 +30,7 @@ export default function Game() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [showAnimation, setShowAnimation] = useState(false)
   const [showPickList, setShowPickList] = useState(false)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [incomingReaction, setIncomingReaction] = useState<{ emoji: string; key: number } | null>(null)
   const firstAutoPickDone = useRef(false)
 
@@ -121,7 +122,7 @@ export default function Game() {
 
   const reactionCounter = useRef(0)
   useEffect(() => {
-    if (room?.lastReaction && room.lastReaction.from !== session?.sessionId) {
+    if (room?.lastReaction) {
       reactionCounter.current += 1
       setIncomingReaction({ emoji: room.lastReaction.emoji, key: reactionCounter.current })
       const t = setTimeout(() => setIncomingReaction(null), 2000)
@@ -184,7 +185,7 @@ export default function Game() {
 
         {/* Status */}
         <div className="flex items-center justify-between gap-2">
-          <div className="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-500"
+          <div className="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-500 min-w-0"
             style={{
               background: myTurn ? theme.gradient : myTurnToAnswer ? `${theme.primary}15` : 'var(--card-bg)',
               color: myTurn ? '#fff' : myTurnToAnswer ? theme.primary : 'var(--text-muted)',
@@ -193,6 +194,31 @@ export default function Game() {
             }}>
             {myTurn ? '🎯 Giliran kamu bertanya' : myTurnToAnswer ? `✋ ${peerName} bertanya` : room?.currentPhase === 'answering' ? `⏳ ${peerName} menjawab...` : `⏳ ${peerName} memilih...`}
           </div>
+          {room?.status === 'playing' && (
+            <div className="relative shrink-0">
+              <button onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                className="w-9 h-9 rounded-xl flex items-center justify-center text-lg transition-all cursor-pointer hover:scale-110 active:scale-95"
+                style={{ background: `${theme.primary}12`, color: theme.primary }}>
+                😊
+              </button>
+              {showEmojiPicker && (
+                <>
+                  <div className="absolute top-full right-0 mt-2 z-50 p-3 rounded-2xl border shadow-lg grid grid-cols-5 gap-1.5"
+                    style={{ background: 'var(--panel-bg)', borderColor: 'var(--card-border)' }}>
+                    {EMOJIS.map((e) => (
+                      <button key={e} onClick={() => { sendReaction(e); setShowEmojiPicker(false) }}
+                        className="w-9 h-9 flex items-center justify-center text-lg rounded-xl hover:scale-120 transition-transform cursor-pointer active:scale-140"
+                        style={{ background: `${theme.primary}08` }}>
+                        {e}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowEmojiPicker(false)} />
+                </>
+              )}
+            </div>
+          )}
+
         </div>
 
         {/* Main */}
@@ -235,7 +261,6 @@ export default function Game() {
                   🎲 Lempar Random
                 </button>
                 <button onClick={() => {
-                  clearTimer()
                   const sh = [...unusedQuestions].sort(() => Math.random() - 0.5)
                   setPickOptions(sh.slice(0, Math.min(5, sh.length))); setShowPickList(true)
                 }} disabled={loading}
@@ -264,7 +289,7 @@ export default function Game() {
                   </button>
                 ))}
               </div>
-              <button onClick={() => { setShowPickList(false); startTimer() }}
+              <button onClick={() => setShowPickList(false)}
                 className="text-sm mx-auto block underline cursor-pointer text-theme-muted">← Kembali</button>
             </div>
           )}
@@ -374,23 +399,12 @@ export default function Game() {
             </div>
           )}
 
-          {/* Emoji reactions bar */}
-          {room?.status === 'playing' && (
-            <div className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-2xl border self-center" style={{ background: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
-              {EMOJIS.map((e) => (
-                <button key={e} onClick={() => sendReaction(e)}
-                  className="text-lg hover:scale-130 transition-transform cursor-pointer active:scale-150">
-                  {e}
-                </button>
-              ))}
-            </div>
-          )}
-
           {/* Exit button */}
           {room?.status === 'playing' && (
             <button onClick={async () => { if (confirm('Akhiri game?')) await endGame() }}
-              className="text-xs text-theme-muted underline cursor-pointer hover:text-theme-body transition-colors self-center">
-              ✕ Exit Game
+              className="px-5 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer active:scale-95"
+              style={{ background: `${theme.primary}12`, color: theme.primary, border: `1px solid ${theme.primary}25` }}>
+              ✕ Akhiri Game
             </button>
           )}
         </div>
