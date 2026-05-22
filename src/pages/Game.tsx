@@ -25,7 +25,7 @@ export default function Game() {
   const [pickOptions, setPickOptions] = useState<string[]>([])
   const [usedPickChance, setUsedPickChance] = useState(false)
   const [answerText, setAnswerText] = useState('')
-  const [timer, setTimer] = useState(30)
+  const [timer, setTimer] = useState(60)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [showAnimation, setShowAnimation] = useState(false)
   const [showPickList, setShowPickList] = useState(false)
@@ -76,7 +76,7 @@ export default function Game() {
   }, [])
 
   const startTimer = useCallback(() => {
-    clearTimer(); setTimer(30)
+    clearTimer(); setTimer(60)
     timerRef.current = setInterval(() => {
       setTimer((t) => { if (t <= 1) { clearTimer(); return 0 }; return t - 1 })
     }, 1000)
@@ -212,7 +212,7 @@ export default function Game() {
                   <svg className="w-20 h-20 -rotate-90" viewBox="0 0 72 72">
                     <circle cx="36" cy="36" r="30" fill="none" stroke={`${theme.secondary}20`} strokeWidth="5" />
                     <circle cx="36" cy="36" r="30" fill="none" stroke={timer <= 5 ? '#f43f5e' : theme.primary} strokeWidth="5" strokeLinecap="round"
-                      strokeDasharray={`${(timer / 30) * 188.5} 188.5`} className="transition-all duration-1000" />
+                      strokeDasharray={`${(timer / 60) * 188.5} 188.5`} className="transition-all duration-1000" />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="text-2xl font-bold" style={{ color: timer <= 5 ? '#f43f5e' : theme.primary }}>{timer}</span>
