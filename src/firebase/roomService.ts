@@ -49,6 +49,8 @@ export async function createRoom(
     },
     lastQuestion: '',
     lastQuestionBy: '',
+    lastAnswer: '',
+    lastAnswerBy: '',
     createdAt: serverTimestamp() as any,
     playerNames: ['Player 1', 'Player 2'],
   }
@@ -169,7 +171,6 @@ export async function answerQuestion(
   if (!room.players.includes(sessionId)) throw new Error('Player not in room')
 
   const playerIndex = room.players.indexOf(sessionId) as PlayerIndex
-  const nextTurn = playerIndex === 0 ? 1 : 0
 
   const remainingQuestions = room.questions.filter(
     (q) => !room.usedQuestions.includes(q) && q !== question
@@ -177,8 +178,10 @@ export async function answerQuestion(
 
   const updates: Record<string, any> = {
     [`answers.${question}`]: answer,
+    lastAnswer: answer,
+    lastAnswerBy: sessionId,
     currentPhase: 'asking',
-    currentTurn: nextTurn,
+    currentTurn: playerIndex,
   }
 
   if (remainingQuestions.length === 0) {
