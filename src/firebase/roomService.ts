@@ -1,0 +1,200 @@
+import {
+  doc,
+  setDoc,
+  getDoc,
+  updateDoc,
+  onSnapshot,
+  arrayUnion,
+  serverTimestamp,
+  type Unsubscribe,
+} from 'firebase/firestore'
+import { getDb } from './config'
+import type { Room, PlayerIndex } from '../types'
+
+function generateRoomCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  let code = ''
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return code
+}
+
+export function generateSessionId(): string {
+  return crypto.randomUUID()
+}
+
+function getRoomRef(roomId: string) {
+  return doc(getDb(), 'rooms', roomId)
+}
+
+export async function createRoom(
+  sessionId: string,
+  questions: string[]
+): Promise<string> {
+  const roomCode = generateRoomCode()
+  const roomId = roomCode.toLowerCase()
+
+  const roomData: Room = {
+    code: roomCode,
+    questions,
+    usedQuestions: [],
+    answers: {},
+    players: [sessionId, ''],
+    status: 'waiting',
+    currentTurn: 0,
+    currentPhase: 'asking',
+    pickChances: {
+      [sessionId]: 3,
+    },
+    lastQuestion: '',
+    lastQuestionBy: '',
+    createdAt: serverTimestamp() as any,
+    playerNames: ['Player 1', 'Player 2'],
+  }
+
+  await setDoc(getRoomRef(roomId), roomData)
+  return roomId
+}
+
+export async function joinRoom(
+  roomCode: string,
+  sessionId: string
+): Promise<{ roomId: string; room: Room } | { error: string }> {
+  const roomId = roomCode.toLowerCase().trim()
+  const roomRef = getRoomRef(roomId)
+  const roomSnap = await getDoc(roomRef)
+
+  if (!roomSnap.exists()) {
+    return { error: 'Room tidak ditemukan. Periksa kode room.' }
+  }
+
+  const room = roomSnap.data() as Room
+
+  if (room.status !== 'waiting') {
+    return { error: 'Room sudah penuh atau sedang berlangsung.' }
+  }
+
+  if (room.players[0] === sessionId) {
+    return { roomId, room }
+  }
+
+  if (room.players[1] && room.players[1] !== '') {
+    return { error: 'Room sudah penuh.' }
+  }
+
+  const updatedPlayers: [string, string] = [room.players[0], sessionId]
+  const pickChances = {
+    ...(room.pickChances || {}),
+    [sessionId]: 3,
+  }
+
+  await updateDoc(roomRef, {
+    players: updatedPlayers,
+    status: 'playing',
+    pickChances,
+  })
+
+  return {
+    roomId,
+    room: {
+      ...room,
+      players: updatedPlayers,
+      status: 'playing',
+      pickChances,
+      answers: room.answers || {},
+    },
+  }
+}
+
+export async function reconnectRoom(
+  roomId: string,
+  sessionId: string
+): Promise<{ room: Room; playerIndex: PlayerIndex } | null> {
+  const roomSnap = await getDoc(getRoomRef(roomId))
+  if (!roomSnap.exists()) return null
+
+  const room = roomSnap.data() as Room
+  if (!room.players.includes(sessionId)) return null
+  const playerIndex = room.players.indexOf(sessionId) as PlayerIndex
+
+  return { room, playerIndex }
+}
+
+export async function askQuestion(
+  roomId: string,
+  question: string,
+  sessionId: string,
+  usedPickChance: boolean
+): Promise<void> {
+  const roomRef = getRoomRef(roomId)
+  const roomSnap = await getDoc(roomRef)
+  const room = roomSnap.data() as Room
+
+  if (!room.players.includes(sessionId)) throw new Error('Player not in room')
+
+  const updates: Record<string, any> = {
+    usedQuestions: arrayUnion(question),
+    lastQuestion: question,
+    lastQuestionBy: sessionId,
+    currentPhase: 'answering',
+  }
+
+  if (usedPickChance) {
+    const currentChances = room.pickChances?.[sessionId] ?? 3
+    updates[`pickChances.${sessionId}`] = currentChances - 1
+  }
+
+  const remainingQuestions = room.questions.filter(
+    (q) => ![...room.usedQuestions, question].includes(q)
+  )
+
+  if (remainingQuestions.length === 0) {
+    updates.status = 'finished'
+  }
+
+  await updateDoc(roomRef, updates)
+}
+
+export async function answerQuestion(
+  roomId: string,
+  question: string,
+  answer: string,
+  sessionId: string
+): Promise<void> {
+  const roomRef = getRoomRef(roomId)
+  const roomSnap = await getDoc(roomRef)
+  const room = roomSnap.data() as Room
+
+  if (!room.players.includes(sessionId)) throw new Error('Player not in room')
+
+  const playerIndex = room.players.indexOf(sessionId) as PlayerIndex
+  const nextTurn = playerIndex === 0 ? 1 : 0
+
+  const remainingQuestions = room.questions.filter(
+    (q) => !room.usedQuestions.includes(q) && q !== question
+  )
+
+  const updates: Record<string, any> = {
+    [`answers.${question}`]: answer,
+    currentPhase: 'asking',
+    currentTurn: nextTurn,
+  }
+
+  if (remainingQuestions.length === 0) {
+    updates.status = 'finished'
+  }
+
+  await updateDoc(roomRef, updates)
+}
+
+export function subscribeRoom(
+  roomId: string,
+  callback: (room: Room) => void
+): Unsubscribe {
+  return onSnapshot(getRoomRef(roomId), (snapshot) => {
+    if (snapshot.exists()) {
+      callback(snapshot.data() as Room)
+    }
+  })
+}

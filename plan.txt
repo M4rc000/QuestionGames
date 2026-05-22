@@ -1,0 +1,17 @@
+Buatkan software react vite tsx dengan tailwind v4 serta database free firebase. Untuk tools sebisa mungkin yang bisa di gunakan atau deploy secara free 
+Saya sudah menyiapkan pertanyaan sebanyak berikut ini :
+Menurut kamu, hubungan kita bakal seperti apa 5 tahun lagi?
+Kalau nanti tinggal bareng, hal apa yang paling kamu takutkan?
+Kamu lebih pengen nikah muda atau nunggu semuanya mapan?
+Kalau kita beda pendapat soal masa depan, siapa yang biasanya harus ngalah?
+Kamu pernah insecure gara-gara hubungan kita?
+Kalau bisa ngubah satu hal dari aku, kamu mau ubah apa?
+Apa yang bikin seseorang layak dipertahankan?
+Kamu lebih takut dibohongi atau diabaikan?
+Kalau suatu hari rasa cinta mulai berkurang, kamu bakal jujur atau diam? 
+
+Pertanyaa diatas Hanya sebagai contoh.
+Jadi rencananya software ini memiliki session, agar dapat dibuka oleh 2 user. Anda bebas menetapkan credentials nya berupa code atau semacamnya. Software ini ditujukan agar saya dengan pasangan saya dapat saling bertukar pertanyaan, jadi admin room akan mengimport pertanyaan terlebih dahulu. Jika room sudah dibuat dan minimal ada 2 orang yang join baru dapat dimulai. Jadi secara bergantian user saling melempar 1 pertanyaan hingga total pertanyaan nya habis. User bisa melempar secara random atau kesempatan 3 kali memilih 1 pertanyaa yang akan dilempar dari list 5 pertanyan yang disediakan system. Pertanyaan yang sudah ditanyakan tidak bisa digunakan lagi.
+
+
+Tolong implementasikan di folder QuestionGame!
