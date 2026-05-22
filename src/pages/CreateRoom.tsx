@@ -37,9 +37,8 @@ export default function CreateRoom() {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 animate-fade-up">
         <div className="max-w-lg w-full space-y-6">
-          <button onClick={() => setStep('input')} className="font-medium transition-colors cursor-pointer flex items-center gap-1" style={{ color: theme.secondary }}>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-            Kembali
+          <button onClick={() => setStep('input')} className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all cursor-pointer active:scale-95 hover:opacity-80" style={{ background: `${theme.primary}10`, color: theme.primary }}>
+            ← Kembali
           </button>
           <div className="rounded-2xl p-6 shadow-lg space-y-4" style={cardStyle}>
             <div className="flex items-center justify-between">
@@ -75,9 +74,8 @@ export default function CreateRoom() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 animate-fade-up">
       <div className="max-w-lg w-full space-y-6">
-        <button onClick={() => navigate('/')} className="font-medium transition-colors cursor-pointer flex items-center gap-1" style={{ color: theme.secondary }}>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-          Kembali
+        <button onClick={() => navigate('/')} className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all cursor-pointer active:scale-95 hover:opacity-80" style={{ background: `${theme.primary}10`, color: theme.primary }}>
+          ← Kembali
         </button>
         <div className="rounded-2xl p-6 shadow-lg space-y-4" style={cardStyle}>
           <div className="space-y-1">

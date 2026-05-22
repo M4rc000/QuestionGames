@@ -329,7 +329,8 @@ export default function Game() {
                 ))}
               </div>
               <button onClick={() => setShowPickList(false)}
-                className="text-sm mx-auto block underline cursor-pointer text-theme-muted">← Kembali</button>
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all cursor-pointer active:scale-95 hover:opacity-80"
+                style={{ background: `${theme.primary}10`, color: theme.primary }}>← Kembali</button>
             </div>
           )}
 

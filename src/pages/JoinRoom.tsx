@@ -42,9 +42,8 @@ export default function JoinRoom() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 animate-fade-up">
       <div className="max-w-md w-full space-y-6">
-        <button onClick={() => navigate('/')} className="font-medium transition-colors cursor-pointer flex items-center gap-1" style={{ color: theme.secondary }}>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-          Kembali
+        <button onClick={() => navigate('/')} className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all cursor-pointer active:scale-95 hover:opacity-80" style={{ background: `${theme.primary}10`, color: theme.primary }}>
+          ← Kembali
         </button>
         <div className="rounded-2xl p-8 shadow-lg space-y-6" style={{ background: 'var(--card-bg)', backdropFilter: 'blur(12px)', border: `1px solid ${theme.primary}30`, boxShadow: 'var(--card-shadow)' }}>
           <div className="text-center space-y-3">
