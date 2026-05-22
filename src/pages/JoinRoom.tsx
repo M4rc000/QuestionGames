@@ -1,13 +1,32 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useGame } from '../context/GameContext'
 import { useTheme } from '../context/ThemeContext'
 
 export default function JoinRoom() {
   const navigate = useNavigate()
   const { theme } = useTheme()
+  const { roomCode } = useParams<{ roomCode: string }>()
   const { joinExistingRoom, loading, error, clearError } = useGame()
   const [code, setCode] = useState('')
+
+  const autoJoining = useRef(false)
+
+  useEffect(() => {
+    if (roomCode && !autoJoining.current) {
+      const upper = roomCode.toUpperCase()
+      setCode(upper)
+      autoJoining.current = true
+      const t = setTimeout(() => {
+        const fn = async () => {
+          const roomId = await joinExistingRoom(upper)
+          if (roomId) navigate(`/lobby/${roomId}`)
+        }
+        fn()
+      }, 500)
+      return () => clearTimeout(t)
+    }
+  }, [roomCode])
 
   async function handleJoin() {
     const roomCode = code.trim().toUpperCase()

@@ -10,6 +10,7 @@ export default function Lobby() {
   const { room, session, reconnectToRoom, setPlayerName, toggleReady, loading } = useGame()
   const [nameInput, setNameInput] = useState('')
   const [copied, setCopied] = useState(false)
+  const [linkCopied, setLinkCopied] = useState(false)
   const [nameSaved, setNameSaved] = useState(false)
 
   useEffect(() => { if (roomId) reconnectToRoom() }, [roomId])
@@ -71,7 +72,7 @@ export default function Lobby() {
         <div className="text-center space-y-3">
           <div className="text-5xl animate-float">🎮</div>
           <h2 className="text-2xl font-bold text-theme-heading">Room Siap!</h2>
-          <p className="text-theme-muted text-sm">Bagikan kode ini ke pasanganmu:</p>
+          <p className="text-theme-muted text-sm">Bagikan kode/tautan ini ke pasanganmu:</p>
           <div className="inline-flex items-center gap-3 px-6 py-4 rounded-2xl border-2 shadow-lg"
             style={{ background: 'var(--card-bg)', backdropFilter: 'blur(12px)', borderColor: `${theme.primary}40`, boxShadow: `0 0 20px ${theme.primary}20` }}>
             <span className="text-3xl font-mono font-bold tracking-[0.3em] select-all" style={{ color: theme.primary }}>{room.code}</span>
@@ -81,6 +82,22 @@ export default function Lobby() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
               )}
+            </button>
+          </div>
+          <div className="flex items-center justify-center gap-2">
+            <button onClick={async () => {
+              const url = `${window.location.origin}/join/${room.code}`
+              try {
+                if (navigator.share) {
+                  await navigator.share({ title: 'QuestionGame', text: `Ikuti aku main QuestionGame yuk! Pakai kode: ${room.code}`, url })
+                } else {
+                  await navigator.clipboard.writeText(url); setLinkCopied(true); setTimeout(() => setLinkCopied(false), 2000)
+                }
+              } catch { }
+            }} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all cursor-pointer active:scale-95"
+              style={{ background: `${theme.primary}12`, color: theme.primary }}>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+              {linkCopied ? '✓ Link tersalin' : 'Share Link'}
             </button>
           </div>
           {copied && <p className="text-sm animate-scale-in" style={{ color: theme.primary }}>✓ Kode berhasil disalin!</p>}

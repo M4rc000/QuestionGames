@@ -180,7 +180,7 @@ export default function Game() {
               border: !myTurn && !myTurnToAnswer ? `1px solid var(--card-border)` : myTurnToAnswer ? `1px solid ${theme.primary}30` : 'none',
               boxShadow: myTurn ? `0 4px 15px ${theme.primary}40` : 'none',
             }}>
-            {myTurn ? '🎯 Giliran kamu bertanya' : myTurnToAnswer ? `✋ ${peerName} bertanya` : `⏳ Menunggu ${peerName}...`}
+            {myTurn ? '🎯 Giliran kamu bertanya' : myTurnToAnswer ? `✋ ${peerName} bertanya` : room?.currentPhase === 'answering' ? `⏳ ${peerName} menjawab...` : `⏳ ${peerName} memilih...`}
           </div>
           <div className="text-xs px-3 py-2 rounded-xl border shadow-sm whitespace-nowrap text-theme-muted" style={{ background: 'var(--card-bg)', borderColor: 'var(--card-border)', boxShadow: 'var(--card-shadow)' }}>
             🎲 Pilih 5: <span className="font-bold" style={{ color: theme.primary }}>{pickChances}</span>
@@ -344,7 +344,7 @@ export default function Game() {
               <div className="w-full max-w-sm text-center space-y-4 animate-fade-in">
                 <div className="animate-float text-4xl">💭</div>
                 <p className="text-sm text-theme-muted">
-                  <strong style={{ color: theme.primary }}>{peerName}</strong> sedang memilih pertanyaan...
+                  <strong style={{ color: theme.primary }}>{peerName}</strong> {room?.currentPhase === 'answering' ? 'sedang menjawab pertanyaan...' : 'sedang memilih pertanyaan...'}
                 </p>
                 <div className="rounded-2xl p-6 shadow-lg" style={{ background: 'var(--card-bg)', backdropFilter: 'blur(12px)', border: glassBorder, boxShadow: `var(--card-shadow), ${glassShadow}` }}>
                   <p className="text-theme-subtle text-xs mb-2">Pertanyaan sebelumnya</p>
@@ -352,7 +352,7 @@ export default function Game() {
                 </div>
                 <div className="flex items-center justify-center gap-2 text-theme-muted">
                   <span className="w-2 h-2 rounded-full animate-ping" style={{ background: theme.primary }} />
-                  <span className="text-sm">Menunggu pertanyaan baru...</span>
+                  <span className="text-sm">{room?.currentPhase === 'answering' ? 'Menunggu jawaban...' : 'Menunggu pertanyaan baru...'}</span>
                 </div>
               </div>
             </>
