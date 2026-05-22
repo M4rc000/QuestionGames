@@ -54,6 +54,7 @@ export async function createRoom(
     lastAnswerBy: '',
     lastAnswerFor: '',
     lastReaction: null,
+    reactionTs: 0,
     createdAt: serverTimestamp() as any,
     playerNames: ['Player 1', 'Player 2'],
   }
@@ -205,7 +206,13 @@ export async function sendReaction(
   const roomRef = getRoomRef(roomId)
   await updateDoc(roomRef, {
     lastReaction: { from: sessionId, emoji },
+    reactionTs: Date.now(),
   })
+}
+
+export async function endGame(roomId: string): Promise<void> {
+  const roomRef = getRoomRef(roomId)
+  await updateDoc(roomRef, { status: 'finished' })
 }
 
 export function subscribeRoom(

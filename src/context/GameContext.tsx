@@ -8,6 +8,7 @@ import {
   askQuestion,
   answerQuestion,
   sendReaction as sendReactionService,
+  endGame as endGameService,
   toggleReady as toggleReadyService,
   subscribeRoom,
 } from '../firebase/roomService'
@@ -36,6 +37,7 @@ interface GameContextType {
   setPlayerName: (name: string) => Promise<void>
   toggleReady: () => Promise<void>
   sendReaction: (emoji: string) => Promise<void>
+  endGame: () => Promise<void>
   reconnectToRoom: () => Promise<void>
   clearError: () => void
 }
@@ -272,6 +274,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
     [session]
   )
 
+  const endGame = useCallback(async () => {
+    if (!session?.roomId) return
+    try {
+      await endGameService(session.roomId)
+    } catch (e: any) {
+      console.error('Failed to end game:', e)
+    }
+  }, [session])
+
   const clearError = useCallback(() => setError(null), [])
 
   return (
@@ -291,6 +302,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         setPlayerName,
         toggleReady,
         sendReaction,
+        endGame,
         reconnectToRoom,
         clearError,
       }}

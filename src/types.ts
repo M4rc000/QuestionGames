@@ -19,6 +19,7 @@ export interface Room {
   lastAnswerBy: string
   lastAnswerFor: string
   lastReaction: { from: string; emoji: string } | null
+  reactionTs: number
   createdAt: any
   playerNames: [string, string]
 }

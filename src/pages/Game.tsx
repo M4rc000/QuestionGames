@@ -19,7 +19,7 @@ export default function Game() {
   const {
     room, session, isMyTurn, isMyTurnToAnswer,
     getUnusedQuestions,
-    submitQuestion, submitAnswer, sendReaction, loading, reconnectToRoom,
+    submitQuestion, submitAnswer, sendReaction, endGame, loading, reconnectToRoom,
   } = useGame()
 
   const [localPhase, setLocalPhase] = useState<LocalPhase>('waiting')
@@ -127,7 +127,7 @@ export default function Game() {
       const t = setTimeout(() => setIncomingReaction(null), 2000)
       return () => clearTimeout(t)
     }
-  }, [room?.lastReaction?.emoji, room?.lastReaction?.from])
+  }, [room?.reactionTs])
 
   const confirmPick = useCallback((q: string) => {
     setSelectedQuestion(q); setShowPickList(false)
@@ -349,24 +349,7 @@ export default function Game() {
                     <p className="text-sm" style={{ color: theme.primaryDark }}>{previousAnswer.answer}</p>
                   </div>
                 </div>
-          )}
-
-          {/* Incoming reaction */}
-          {incomingReaction && (
-            <div key={incomingReaction.key} className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center">
-              <span className="text-7xl animate-bounce" style={{ animationDuration: '1s' }}>{incomingReaction.emoji}</span>
-            </div>
-          )}
-
-          {/* Emoji reactions bar */}
-          <div className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-2xl border self-center" style={{ background: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
-            {EMOJIS.map((e) => (
-              <button key={e} onClick={() => sendReaction(e)}
-                className="text-lg hover:scale-130 transition-transform cursor-pointer active:scale-150">
-                {e}
-              </button>
-            ))}
-          </div>
+              )}
               <div className="w-full max-w-sm text-center space-y-4 animate-fade-in">
                 <div className="animate-float text-4xl">💭</div>
                 <p className="text-sm text-theme-muted">
@@ -382,6 +365,33 @@ export default function Game() {
                 </div>
               </div>
             </>
+          )}
+
+          {/* Incoming reaction */}
+          {incomingReaction && (
+            <div key={incomingReaction.key} className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center">
+              <span className="text-7xl animate-bounce" style={{ animationDuration: '1s' }}>{incomingReaction.emoji}</span>
+            </div>
+          )}
+
+          {/* Emoji reactions bar */}
+          {room?.status === 'playing' && (
+            <div className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-2xl border self-center" style={{ background: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
+              {EMOJIS.map((e) => (
+                <button key={e} onClick={() => sendReaction(e)}
+                  className="text-lg hover:scale-130 transition-transform cursor-pointer active:scale-150">
+                  {e}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Exit button */}
+          {room?.status === 'playing' && (
+            <button onClick={async () => { if (confirm('Akhiri game?')) await endGame() }}
+              className="text-xs text-theme-muted underline cursor-pointer hover:text-theme-body transition-colors self-center">
+              ✕ Exit Game
+            </button>
           )}
         </div>
       </div>
